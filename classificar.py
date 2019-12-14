@@ -1,7 +1,7 @@
 '''
-    Este módulo integra o detector, extrator e o classificador
+    Este modulo lê as features vectors extraídas e utiliza uma SVM para
+    classificar e reconhecer os rostos
 '''
-
 #%%
 import cv2
 from mtcnn.mtcnn import MTCNN	
@@ -11,4 +11,3 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import keras as K
 import pandas as pd
-

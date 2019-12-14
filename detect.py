@@ -1,36 +1,85 @@
+'''
+    Este módulo encontra as imagens e labels através de arquivo CSV.
+    Utiliza uma implementação de MultiTask CNN para encontrar os rostos
+    em uma imagem.
+    A saída final é um arquivo NPZ que contem as imagens e labels em
+    formato numpy
+'''
+#%%
 import cv2
-from mtcnn.mtcnn import MTCNN
+from mtcnn.mtcnn import MTCNN	
 import numpy as np
+import pandas as pd
 
-file_name = 'test3.jpg'
-pixels = cv2.imread(file_name)
-
+#%%
+# gerando instância de detecção facial
 detector = MTCNN()
-faces = detector.detect_faces(pixels)
 
-x = np.zeros(len(faces))
-y = np.zeros(len(faces))
-w = np.zeros(len(faces))
-h = np.zeros(len(faces))
-keypoints = list(range(len(faces)))
+#%%
+def extrair_face(url, output_size=(160,160)):
+    '''
+        Recebe o caminho de uma imagem, faz a leitura em RGB
+        e retorna apenas as faces encontradas na imagem
+    '''
+    # Lendo imagem em RGB
+    img = cv2.imread(url)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-i = 0
-for face in faces:
-    x[i], y[i], w[i], h[i] = face['box']
-    keypoints[i] = face['keypoints'].values()
-    i = i + 1
+    # detectando faces em uma imagem
+    faces = detector.detect_faces(img)
 
+    rosto = list() # variável que guarda os rostos extraídos
+    for face in faces:
+        x1, y1, w, h = face['box'] # recebendo variaveis do bounding box
+        x1, y1, w, h = np.abs(x1), np.abs(y1), np.abs(w), np.abs(h)
 
-img = cv2.imread(file_name)
-for i in range(len(faces)):
-    pt1 = (int(x[i]), int(y[i]))
-    pt2 = (int(x[i]+w[i]), int(y[i]+h[i]))
-    cor = (255, 0, 0)
-    cv2.rectangle(img, pt1, pt2, cor)
+        # Definindo os pontos para recortar o rosto. Precisam ser inteiros.
+        X1, Y1 = int(x1), int(y1) 
+        X2, Y2 = int(x1+w), int(y1+h)
 
-    for kp in keypoints[i]:
-        cv2.circle(img, kp, 1, cor,thickness=2)
+        cara = img[Y1:Y2, X1:X2] # recorta o rosto
 
-cv2.imshow('img', img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+        rosto.append(cv2.resize(cara, output_size)) # salva o rosto numa lista
+    
+    # O codigo encontra e recorta todos os rostos. Mas por enquanto,
+    # esta função retorna apenas o primeiro rosto encontrado
+    return np.asarray(rosto[0])
+
+#%%
+def preparar_dataset(csv_url):
+    dataset = pd.read_csv(csv_url)
+    urls, label = dataset.values[:, 0], dataset.values[:, 1]
+
+    print('Processando...')
+
+    faces = list(range(len(urls)))
+    i = 0
+
+    faces = [extrair_face(url) for url in urls]
+    '''
+    for url in urls:
+        faces[i] = extrair_face(url)
+        i = i + 1
+    '''
+
+    print(f'{len(urls)} imagens')
+    print(f'{len(np.unique(label))} classes')
+
+    return np.asarray(faces), np.asarray(label).reshape(-1,1)
+
+#%% Salvando dados preparados
+def preparar_e_salvar_dataset(train_url, valid_url=None):
+    '''
+        Essa função prepara um arquivo NPZ com os dados de treino e validação
+    '''
+    X_train, y_train = preparar_dataset(train_url)
+    X_valid, y_valid = preparar_dataset(valid_url)
+
+    np.savez_compressed('resultados/5Celebs.npz', X_train, y_train, X_valid, y_valid)
+
+#%%
+if __name__ == '__main__':
+    train_url='datasets/5CelebTrain.csv'
+    valid_url='datasets/5CelebValid.csv'
+
+    preparar_e_salvar_dataset(train_url, valid_url)
