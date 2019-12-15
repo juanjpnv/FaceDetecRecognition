@@ -68,18 +68,21 @@ def preparar_dataset(csv_url):
     return np.asarray(faces), np.asarray(label).reshape(-1,1)
 
 #%% Salvando dados preparados
-def preparar_e_salvar_dataset(train_url, valid_url=None):
+def preparar_e_salvar_dataset(train_url, valid_url=None, destino='resultado'):
     '''
         Essa função prepara um arquivo NPZ com os dados de treino e validação
     '''
     X_train, y_train = preparar_dataset(train_url)
-    X_valid, y_valid = preparar_dataset(valid_url)
 
-    np.savez_compressed('resultados/5Celebs.npz', X_train, y_train, X_valid, y_valid)
+    if valid_url == None:
+        np.savez_compressed(destino, X_train, y_train)
+    else:
+        X_valid, y_valid = preparar_dataset(valid_url)
+        np.savez_compressed(destino, X_train, y_train, X_valid, y_valid)
 
 #%%
 if __name__ == '__main__':
-    train_url='datasets/5CelebTrain.csv'
-    valid_url='datasets/5CelebValid.csv'
+    train_url='datasets/juaneantonia.csv'
+    valid_url=None
 
-    preparar_e_salvar_dataset(train_url, valid_url)
+    preparar_e_salvar_dataset(train_url, destino='resultados/juaneantonia.npz')
