@@ -53,14 +53,8 @@ def preparar_dataset(csv_url):
     print('Processando...')
 
     faces = list(range(len(urls)))
-    i = 0
 
     faces = [extrair_face(url) for url in urls]
-    '''
-    for url in urls:
-        faces[i] = extrair_face(url)
-        i = i + 1
-    '''
 
     print(f'{len(urls)} imagens')
     print(f'{len(np.unique(label))} classes')
