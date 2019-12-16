@@ -1,4 +1,6 @@
 import os
+import numpy as np
+import pandas as pd
 
 # This is a tiny script to help you creating a CSV file from a face
 # database with a similar hierarchie:
@@ -38,21 +40,34 @@ def separados_por_pastas(path):
         A label é o nome da pasta de cada imagem
     '''
     separador = ","
-
+    lista = list()
     print(f'Path{separador}Label')
     for dirname, dirnames, filenames in os.walk(path):
         for subdirname in dirnames:
             subject_path = os.path.join(dirname, subdirname)
             for filename in os.listdir(subject_path):
                 abs_path = f'{subject_path}/{filename}'
+                linha = f'{abs_path}{separador}{subdirname}'
+                lista.append(linha)
                 print(f'{abs_path}{separador}{subdirname}')
+    return lista
 
+def gerar_csv(lista, path):
+    data = list()
+    for item in lista:
+        data.append(item.split(','))
+
+    data = np.array(data)
+    dataframe = pd.DataFrame(list(zip(data[:,0],data[:,1])),columns=['url','label'])
+
+    dataframe.to_csv(path, index=0)
 
 tipo = input("Cada pessoa tem pasta propria (S/N): ")
 path = input("Path: ")
 
 if (tipo == "S"):
-    separados_por_pastas(path)
+    lista = separados_por_pastas(path)
+    gerar_csv(lista, 'arquivoCSV.csv')
 elif (tipo == "N"):
     tudo_em_uma_pasta(path)
 else:
