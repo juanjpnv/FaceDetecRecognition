@@ -46,6 +46,9 @@ class Reconhecer:
         return self.svm.predict(X)
 
 def teste_skf(path):
+    '''
+        Entrada: path de um arquivo .npz
+    '''
     data = np.load(path, allow_pickle=1)
     X, y = data['arr_0'].reshape(-1,128), data['arr_1']
     skf = StratifiedKFold(n_splits=5)
